@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 100) {
-            setupWebView() // পারমিশন দেওয়ার পর WebView লোড হবে
+            setupWebView()
         }
     }
 
@@ -75,14 +75,15 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
         }
 
-        // মাইক এবং ক্যামেরা পারমিশন সঠিকভাবে দেওয়ার জন্য AssetLoader
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
-                return loader.shouldInterceptRequest(request?.url)
+                // এখানে লিংক ফাঁকা কিনা চেক করা হয়েছে
+                val url = request?.url ?: return null
+                return loader.shouldInterceptRequest(url)
             }
         }
 
@@ -183,7 +184,6 @@ class MainActivity : AppCompatActivity() {
             }
         }, "LunaAndroid")
 
-        // WebViewAssetLoader এর সিকিউর লিংক ব্যবহার করা হলো
         webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html")
     }
 
