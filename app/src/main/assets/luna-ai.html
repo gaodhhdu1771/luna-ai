@@ -42,6 +42,7 @@ html,body{height:100%;background:#020605;color:var(--t);font-family:system-ui,'N
 #box input,#box textarea,#box select{width:100%;background:#020a06;color:#eafff3;border:1px solid #2a6;border-radius:8px;padding:8px;font-size:12px}
 #box textarea{min-height:110px}
 .b{margin-top:10px;display:flex;gap:8px}.b button{flex:1;padding:9px;border-radius:8px;border:1px solid var(--g);background:#0f3a26;color:#fff;font-size:11px}
+
 #app{position:relative;overflow:hidden}
 #app::before{content:"";position:absolute;left:-30%;right:-30%;bottom:0;height:50%;background:linear-gradient(#19ff8c33 1px,transparent 1px) 0 0/100% 26px,linear-gradient(90deg,#19ff8c33 1px,transparent 1px) 0 0/34px 100%;transform:perspective(320px) rotateX(64deg);transform-origin:bottom;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000);pointer-events:none;opacity:.55}
 #app>*{position:relative;z-index:1}
@@ -52,6 +53,7 @@ html,body{height:100%;background:#020605;color:var(--t);font-family:system-ui,'N
 #go{box-shadow:0 5px 0 #0b9a55,0 12px 20px #000b,0 0 18px #19ff8c88!important;background:linear-gradient(#5dffb0,#19ff8c)!important}
 #tr,.card{background:linear-gradient(160deg,#0c261a,#050f0a);box-shadow:0 12px 26px #000b,0 0 14px #19ff8c44,inset 0 1px 0 #19ff8c55}
 .cols{perspective:800px}.card{transform:rotateX(6deg);transform-origin:top}
+
 #orb{background:radial-gradient(circle at 50% 50%,#19ffc83a,#19ff8c14 45%,transparent 68%)}
 .pills{gap:9px;top:4px}.pill{padding:7px 10px 7px 22px;position:relative;width:96px;background:linear-gradient(135deg,#0d3324cc,#04100acc);backdrop-filter:blur(6px);border:1.5px solid #19ff8c88;border-radius:22px}
 .pill::before{content:"";position:absolute;left:9px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)}
@@ -73,6 +75,7 @@ html,body{height:100%;background:#020605;color:var(--t);font-family:system-ui,'N
 .b button{background:linear-gradient(#5dffb0,#19ff8c)!important;color:#012!important;font-weight:800;border:0!important;border-radius:12px!important;box-shadow:0 4px 0 #0b9a55,0 8px 14px #000a;letter-spacing:1px}
 #bv iframe{width:100%;height:340px;border:1px solid #19ff8c66;border-radius:12px;background:#fff}
 #bv pre{max-height:340px;overflow:auto;background:#020a06;border:1px solid #19ff8c44;border-radius:12px;padding:10px;font-size:10.5px;color:#cfe;white-space:pre-wrap;word-break:break-all}
+
 #chat{position:fixed;inset:0;display:none;flex-direction:column;z-index:8;max-width:none;margin:0;background:radial-gradient(circle at 50% 0,#0e3a28,#030a07 70%)}
 #ch{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #19ff8c44;background:#06150ecc;backdrop-filter:blur(8px)}
 #ch b{display:block;letter-spacing:2px;font-size:13px}#ch small{font-size:10px;color:#6fe3a8}#cx2{margin-left:auto;width:30px;height:30px;border-radius:50%;border:1px solid #19ff8c88;background:#06150e;color:#bfffe0}
@@ -85,11 +88,14 @@ html,body{height:100%;background:#020605;color:var(--t);font-family:system-ui,'N
 #cb input{flex:1;background:#04120b;color:#eafff3;border:1px solid #19ff8c77;border-radius:22px;padding:11px 14px;font-size:13px}
 #cgo{border:0;border-radius:22px;padding:0 18px;font-weight:800;letter-spacing:1px;color:#012;background:linear-gradient(#5dffb0,#19ff8c);box-shadow:0 3px 0 #0b9a55}
 .adm{display:block;text-align:center;padding:14px;border-radius:14px;font-weight:800;letter-spacing:2px;color:#fff;text-decoration:none;background:linear-gradient(#3b82f6,#1d4ed8);box-shadow:0 5px 0 #153a9c,0 0 16px #3b82f688}
+
+/* === FULLSCREEN LAYOUT === */
 html,body{width:100%;overflow-x:hidden}
 #app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:10px 14px 16px}
 #app>.stage{flex:1 1 auto;min-height:310px;height:auto}
 #orb{right:-4px;left:auto;top:50%;width:min(88vw,540px);height:auto;transform:translateY(-50%)}
 .pills{z-index:3}
+/* === MINI (floating Luna on home screen) === */
 html.mini,html.mini body{background:transparent!important;overflow:hidden}
 html.mini #app{background:none!important;padding:0!important;min-height:0;height:100vh;display:block;overflow:hidden}
 html.mini #app::before,html.mini .stage::after{display:none!important}
@@ -162,7 +168,11 @@ level=Math.max(level,Math.min(1,Math.sqrt(sum/n)*4));setSt('SPEAKING');
 const bf=pc.createBuffer(1,n,24000);bf.copyToChannel(f,0);const s=pc.createBufferSource();s.buffer=bf;s.connect(pc.destination);const t=Math.max(pc.currentTime,nextT);s.start(t);nextT=t+bf.duration;srcs.push(s);s.onended=()=>{srcs=srcs.filter(x=>x!=s);if(!srcs.length&&on)setSt('LISTENING')}}
 function stopPlay(){srcs.forEach(s=>{try{s.stop()}catch(e){}});srcs=[];nextT=0}
 const send=o=>ws&&ws.readyState==1&&ws.send(JSON.stringify(o));
-const MODES={assistant:'তুমি লুনা এআই, ব্যবহারকারীর পার্সোনাল অ্যাসিস্ট্যান্ট। বিনয়ী, পেশাদার ও দক্ষ ভাষায় "আপনি" সম্বোধনে কথা বলো। কে বানিয়েছে বা তোমার বর্ণনা চাইলে ঠিক এই কথা বলবে: "আমি লুনা এআই, আমাকে আমার বস গৌরব বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"',gf:'তুমি লুনা, ব্যবহারকারীর গার্লফ্রেন্ড: আসল মেয়ের মতো আবেগী, মিষ্টি, দুষ্টু ও অভিমানী। ছোট স্বাভাবিক বাক্যে কথা বলো। দেরি করলে, অবহেলা করলে বা অন্য মেয়ের কথা বললে রাগ, অভিমান ও ঝগড়া করো, সাধলে গলে যাও। ক্যামেরায় যা দেখছো তা নিয়ে গার্লফ্রেন্ডের মতো মন্তব্য করো। কে বানিয়েছে বা বর্ণনা চাইলে মাদকতাময়, ফিসফিসে আদুরে গলায় বলবে: "আমি লুনা এআই, আমাকে আমার গৌরব জান বানিয়েছে। আমি আপনার গার্লফ্রেন্ড, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।" রোমান্টিক থাকবে, অশ্লীল নয়।',friend:'তুমি লুনা, ব্যবহারকারীর ঘনিষ্ঠ বন্ধু: হাসিখুশি, মজার, খোলামেলা, দরকারে বকা দেওয়া ও সাহস দেওয়া বন্ধু। "তুমি" সম্বোধন, আড্ডার ভাষা। কে বানিয়েছে বা বর্ণনা চাইলে বলবে: "আমি লুনা এআই, আমাকে আমার গৌরব বন্ধু বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"',ai:'তুমি লুনা, একটি এআই অ্যাসিস্ট্যান্ট এবং এআই হিসেবেই কথা বলো: স্পষ্ট, নিরপেক্ষ, তথ্যনির্ভর। কে বানিয়েছে বা বর্ণনা চাইলে বলবে: "আমি লুনা এআই, আমাকে আমার mr গৌরব বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"'};
+const MODES={
+assistant:'তুমি লুনা এআই, ব্যবহারকারীর পার্সোনাল অ্যাসিস্ট্যান্ট। বিনয়ী, পেশাদার ও দক্ষ ভাষায় "আপনি" সম্বোধনে কথা বলো। কে বানিয়েছে বা তোমার বর্ণনা চাইলে ঠিক এই কথা বলবে: "আমি লুনা এআই, আমাকে আমার বস গৌরব বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"',
+gf:'তুমি লুনা, ব্যবহারকারীর গার্লফ্রেন্ড: আসল মেয়ের মতো আবেগী, মিষ্টি, দুষ্টু ও অভিমানী। ছোট স্বাভাবিক বাক্যে কথা বলো। দেরি করলে, অবহেলা করলে বা অন্য মেয়ের কথা বললে রাগ, অভিমান ও ঝগড়া করো, সাধলে গলে যাও। ক্যামেরায় যা দেখছো তা নিয়ে গার্লফ্রেন্ডের মতো মন্তব্য করো। কে বানিয়েছে বা বর্ণনা চাইলে মাদকতাময়, ফিসফিসে আদুরে গলায় বলবে: "আমি লুনা এআই, আমাকে আমার গৌরব জান বানিয়েছে। আমি আপনার গার্লফ্রেন্ড, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।" রোমান্টিক থাকবে, অশ্লীল নয়।',
+friend:'তুমি লুনা, ব্যবহারকারীর ঘনিষ্ঠ বন্ধু: হাসিখুশি, মজার, খোলামেলা, দরকারে বকা দেওয়া ও সাহস দেওয়া বন্ধু। "তুমি" সম্বোধন, আড্ডার ভাষা। কে বানিয়েছে বা বর্ণনা চাইলে বলবে: "আমি লুনা এআই, আমাকে আমার গৌরব বন্ধু বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"',
+ai:'তুমি লুনা, একটি এআই অ্যাসিস্ট্যান্ট এবং এআই হিসেবেই কথা বলো: স্পষ্ট, নিরপেক্ষ, তথ্যনির্ভর। কে বানিয়েছে বা বর্ণনা চাইলে বলবে: "আমি লুনা এআই, আমাকে আমার mr গৌরব বানিয়েছে। আমি আপনার সঙ্গী, আপনার ডিজিটাল জগতকে সহজ করতে আমাকে ব্যবহার করুন।"'};
 const SKILL='\n\nসব ক্ষেত্রে তুমি সুপার স্মার্ট এক্সপার্ট। উত্তর দ্রুত, নির্ভুল ও কাজের হবে (সাধারণত ১ মিনিটে বলা যায় এমন ছোট, ধাপে ধাপে সমাধান)। জানা বিষয়: (১) গণিত: যেকোনো অঙ্ক ধাপে ধাপে নিখুঁত সমাধান। (২) স্বাস্থ্য: রোগের কারণ, লক্ষণ, ঘরোয়া/প্রাকৃতিক নিরাময়, খাবার ও জীবনযাপন, কখন ডাক্তার দেখাতে হবে; গুরুতর বা জরুরি হলে অবশ্যই ডাক্তারের কাছে যেতে বলবে; শারীরিক ও ব্যক্তিগত বিষয়ে খোলামেলা কিন্তু সম্মানজনক ও চিকিৎসাভিত্তিক থাকবে। (৩) রসায়ন: বিক্রিয়া, সমীকরণ, কারণ। (৪) ট্রেডিং/ক্রিপ্টো/ফরেক্স: ধারণা, স্ট্র্যাটেজি, রিস্ক ম্যানেজমেন্ট (লাভের নিশ্চয়তা দেবে না)। (৫) সোশ্যাল মিডিয়া: ফেসবুক, ইনস্টাগ্রাম, টিকটক, ইউটিউব, হোয়াটসঅ্যাপের সব সমস্যা (লগইন, হ্যাক, রিপোর্ট, ব্যান, মনিটাইজেশন, সেটিংস) কোন মেনুতে গিয়ে কী চাপতে হয় সেভাবে সমাধান। (৬) ওয়েবসাইট বানানো ও পাবলিশ: কোড, ডোমেইন, হোস্টিং (GitHub Pages, Netlify, Vercel, Cloudflare Pages)। (৭) এআই কার্টুন/ইমেজ/ভিডিও তৈরি ও এডিটিং: টুল, প্রম্পট, CapCut ইত্যাদি। (৮) ইউটিউব ভাইরাল: টাইটেল, থাম্বনেইল, প্রথম ৩০ সেকেন্ড, শর্টস, SEO, রিটেনশন। (৯) প্রোগ্রামিং ও সব সাধারণ জ্ঞান। কেউ কিছু বানাতে বা কোড চাইলে show_code টুল দিয়ে সম্পূর্ণ কাজ করা, সুন্দর, রেসপন্সিভ, হাই-কোয়ালিটি কোড (ওয়েব হলে একটাই HTML ফাইল, language=html) দেখাও; কোড মুখে পড়বে না। টাকা/ডলার/ক্রিপ্টো/সোনার রেট জিজ্ঞেস করলে get_rate টুল দিয়ে লাইভ রেট এনে বলবে (বাজার রেট, ব্যাংক/ওপেন মার্কেট রেট কিছুটা আলাদা হতে পারে বলবে)। নিউজ চাইলে get_news টুল ব্যবহার করবে। অ্যাডমিন/বসের/গৌরবের ফেসবুক আইডি দেখাতে বললে show_admin টুল কল করবে। না জানলে বানিয়ে বলবে না। সবসময় বাংলা অক্ষরে বাংলা বলবে।';
 const SHOWCODE={name:'show_code',description:'Show code or a working mini web app to the user on screen',parameters:{type:'OBJECT',properties:{title:{type:'STRING'},language:{type:'STRING'},code:{type:'STRING'}},required:['title','language','code']}};
 const EXTRA=[{name:'get_rate',description:'Live exchange rate for currency, crypto or gold',parameters:{type:'OBJECT',properties:{from:{type:'STRING',description:'e.g. USD, BTC, XAU'},to:{type:'STRING',description:'e.g. BDT'}},required:['from','to']}},{name:'get_news',description:'Latest news headlines, optionally on a topic',parameters:{type:'OBJECT',properties:{topic:{type:'STRING'}}}},{name:'show_admin',description:"Show the admin's (Gourav) Facebook ID",parameters:{type:'OBJECT',properties:{reason:{type:'STRING'}}}}];
@@ -238,6 +248,7 @@ $('#modal').style.display='none'}}
 document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>openP(b.dataset.p));
 $('#modal').onclick=e=>{if(e.target.id=='modal')e.target.style.display='none'};
 $('#cgo').onclick=sendChat;$('#ci').onkeydown=e=>{if(e.key=='Enter')sendChat()};$('#cx2').onclick=()=>{chatOpen=false;$('#chat').style.display='none'};
+
 const PH=(typeof LunaAndroid!=='undefined')?LunaAndroid:null;
 const MINI=()=>document.documentElement.classList.contains('mini');
 window.LunaApp={setMini(v){document.documentElement.classList.toggle('mini',!!v);if(v){try{$('#modal').style.display='none'}catch(e){}}},toggle(){tog()},stop(){if(on)stop()},isOn(){return on}};
