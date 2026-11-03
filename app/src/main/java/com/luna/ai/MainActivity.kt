@@ -11,6 +11,7 @@ import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 100) {
-            setupWebView() // পারমিশন দেওয়ার পরেই WebView লোড হবে
+            setupWebView()
         }
     }
 
@@ -73,11 +74,10 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             allowFileAccess = true
             allowContentAccess = true
-            // ক্যাশে বন্ধ করা হলো যাতে নতুন কোড লোড হয়
-            cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
+            cacheMode = WebSettings.LOAD_NO_CACHE // ক্যাশে বন্ধ
         }
         
-        webView.clearCache(true)
+        webView.clearCache(true) // ক্যাশে ক্লিয়ার
         webView.clearHistory()
 
         val loader = WebViewAssetLoader.Builder()
@@ -93,9 +93,12 @@ class MainActivity : AppCompatActivity() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
-                // WebView-তে মাইক পারমিশন দেওয়ার জন্য runOnUiThread জরুরি
                 runOnUiThread {
-                    request.grant(request.resources)
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(request.resources)
+                    } else {
+                        requestPerms()
+                    }
                 }
             }
         }
@@ -191,8 +194,9 @@ class MainActivity : AppCompatActivity() {
             }
         }, "LunaAndroid")
 
-        // ?v=2 যোগ করা হলো যাতে ব্রাউজার নতুন কোড লোড করে
-        webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?v=2")
+        // URL-এ টাইমস্ট্যাম্প দেওয়া হলো যাতে নতুন কোড লোড হয়
+        val timestamp = System.currentTimeMillis()
+        webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?t=$timestamp")
     }
 
     override fun onResume() {
