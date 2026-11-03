@@ -75,10 +75,10 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             allowFileAccess = true
             allowContentAccess = true
-            cacheMode = WebSettings.LOAD_NO_CACHE // ক্যাশে বন্ধ
+            cacheMode = WebSettings.LOAD_NO_CACHE
         }
         
-        webView.clearCache(true) // ক্যাশে ক্লিয়ার
+        webView.clearCache(true)
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -94,7 +94,6 @@ class MainActivity : AppCompatActivity() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
                 runOnUiThread {
-                    // সরাসরি পারমিশন গ্রান্ট করা হচ্ছে
                     request.grant(request.resources)
                 }
             }
@@ -191,7 +190,6 @@ class MainActivity : AppCompatActivity() {
             }
         }, "LunaAndroid")
 
-        // URL-এ টাইমস্ট্যাম্প দেওয়া হলো যাতে নতুন কোড লোড হয়
         val timestamp = System.currentTimeMillis()
         webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?t=$timestamp")
     }
