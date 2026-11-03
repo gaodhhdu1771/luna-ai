@@ -34,7 +34,7 @@ class LunaFloatService : Service() {
     private fun showFloat() {
         if (view != null) return
 
-        val size = 150 // ভাসমান সার্কেলের সাইজ
+        val size = 150
         val params = WindowManager.LayoutParams(
             size, size,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -59,7 +59,9 @@ class LunaFloatService : Service() {
 
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
-                    return loader.shouldInterceptRequest(request?.url)
+                    // এখানেও লিংক ফাঁকা কিনা চেক করা হয়েছে
+                    val url = request?.url ?: return null
+                    return loader.shouldInterceptRequest(url)
                 }
             }
             
@@ -68,9 +70,8 @@ class LunaFloatService : Service() {
 
         root.addView(web, FrameLayout.LayoutParams(-1, -1))
 
-        // ৫ সেকেন্ড চেপে ধরার লজিক
         val handler = Handler(Looper.getMainLooper())
-        val longPressRunnable = Runnable { stopSelf() } // ৫ সেকেন্ড পর নিজে থেকেই মুছে যাবে
+        val longPressRunnable = Runnable { stopSelf() }
         var isLongPressed = false
 
         web.setOnTouchListener(object : View.OnTouchListener {
@@ -85,7 +86,7 @@ class LunaFloatService : Service() {
                         tX = e.rawX; tY = e.rawY
                         dragging = false
                         isLongPressed = false
-                        handler.postDelayed(longPressRunnable, 5000) // ৫ সেকেন্ডের টাইমার শুরু
+                        handler.postDelayed(longPressRunnable, 5000)
                         return false
                     }
                     MotionEvent.ACTION_MOVE -> {
@@ -93,7 +94,7 @@ class LunaFloatService : Service() {
                         val dy = (e.rawY - tY).toInt()
                         if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
                             dragging = true
-                            handler.removeCallbacks(longPressRunnable) // সরাতে গেলে টাইমার বাতিল
+                            handler.removeCallbacks(longPressRunnable)
                         }
                         if (dragging) {
                             params.x = initX - dx
@@ -104,7 +105,6 @@ class LunaFloatService : Service() {
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         handler.removeCallbacks(longPressRunnable)
-                        // যদি ড্র্যাগ না করা হয় এবং ৫ সেকেন্ড না পার হয়, তবে মেইন অ্যাপ ওপেন হবে
                         if (!dragging && !isLongPressed) {
                             val intent = Intent(this@LunaFloatService, MainActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
