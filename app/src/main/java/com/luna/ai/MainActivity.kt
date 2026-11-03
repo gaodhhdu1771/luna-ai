@@ -9,6 +9,8 @@ import android.provider.Settings
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
@@ -34,7 +37,6 @@ class MainActivity : AppCompatActivity() {
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        // পারমিশন চেক করা হচ্ছে
         if (hasPerms()) {
             setupWebView()
         } else {
@@ -59,8 +61,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && hasPerms()) {
-            setupWebView() // পারমিশন পেলে তবে ওয়েবভিউ লোড হবে
+        if (requestCode == 100) {
+            setupWebView() // পারমিশন দেওয়ার পর WebView লোড হবে
         }
     }
 
@@ -72,7 +74,18 @@ class MainActivity : AppCompatActivity() {
             allowFileAccess = true
             allowContentAccess = true
         }
-        webView.webViewClient = WebViewClient()
+
+        // মাইক এবং ক্যামেরা পারমিশন সঠিকভাবে দেওয়ার জন্য AssetLoader
+        val loader = WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                return loader.shouldInterceptRequest(request?.url)
+            }
+        }
+
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
                 request.grant(request.resources)
@@ -107,9 +120,7 @@ class MainActivity : AppCompatActivity() {
                 when (name) {
                     "open_app" -> openApp(args.optString("name"), reply)
                     "open_url" -> {
-                        runOnUiThread {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url"))))
-                        }
+                        runOnUiThread { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url")))) }
                         reply("ok")
                     }
                     "read_screen" -> reply(svc?.readScreen() ?: "")
@@ -153,18 +164,12 @@ class MainActivity : AppCompatActivity() {
 
             private fun openApp(name: String, reply: (String) -> Unit) {
                 val pkgs = mapOf(
-                    "youtube" to "com.google.android.youtube",
-                    "whatsapp" to "com.whatsapp",
-                    "chrome" to "com.android.chrome",
-                    "facebook" to "com.facebook.katana",
-                    "messenger" to "com.facebook.orca",
-                    "instagram" to "com.instagram.android",
-                    "tiktok" to "com.zhiliaoapp.musically",
-                    "camera" to "com.android.camera",
-                    "settings" to "com.android.settings",
-                    "gmail" to "com.google.android.gm",
-                    "telegram" to "org.telegram.messenger",
-                    "gallery" to "com.android.gallery3d",
+                    "youtube" to "com.google.android.youtube", "whatsapp" to "com.whatsapp",
+                    "chrome" to "com.android.chrome", "facebook" to "com.facebook.katana",
+                    "messenger" to "com.facebook.orca", "instagram" to "com.instagram.android",
+                    "tiktok" to "com.zhiliaoapp.musically", "camera" to "com.android.camera",
+                    "settings" to "com.android.settings", "gmail" to "com.google.android.gm",
+                    "telegram" to "org.telegram.messenger", "gallery" to "com.android.gallery3d",
                     "play" to "com.android.vending"
                 )
                 val key = name.lowercase().trim()
@@ -178,16 +183,15 @@ class MainActivity : AppCompatActivity() {
             }
         }, "LunaAndroid")
 
-        webView.loadUrl("file:///android_asset/luna-ai.html")
+        // WebViewAssetLoader এর সিকিউর লিংক ব্যবহার করা হলো
+        webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html")
     }
 
-    // অ্যাপে ফিরে আসলে ভাসমান লুনা বন্ধ হয়ে যাবে
     override fun onResume() {
         super.onResume()
         stopService(Intent(this, LunaFloatService::class.java))
     }
 
-    // অ্যাপ থেকে বেরিয়ে গেলে (ব্যাকগ্রাউন্ডে) ভাসমান লুনা চালু হবে
     override fun onPause() {
         super.onPause()
         if (Settings.canDrawOverlays(this)) {
