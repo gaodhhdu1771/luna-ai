@@ -188,12 +188,11 @@ function bub(r,t){const d=document.createElement('div');d.className='bb '+r;d.te
 function openChat(){chatOpen=true;stopPlay();$('#chat').style.display='flex';$('#cs').textContent=on?'online':'send করলে connect হবে'}
 function sendChat(){const t=$('#ci').value.trim();if(!t)return;$('#ci').value='';bub('u',t);curU=curL=null;if(on)send({realtimeInput:{text:t}});else{pend=t;start()}}
 function sysText(){return MODES[cfg.mode||'gf']+SKILL+PHONE_SKILL()+soul+'\nতুমি লাইভ ক্যামেরা/স্ক্রিন দেখতে পারো। দরকারে save_memory/add_task ব্যবহার করো।\nMemory: '+(mem.join('; ')||'(empty)')+'\nTasks: '+tasks.map(t=>t.t).join('; ')}
-async function start(){
-if(!cfg.key){hint('Settings এ Muster API Key দাও।');openP('settings');return}
+async function start(){if(!cfg.key){hint('Settings এ Muster API Key দাও।');openP('settings');return}
 if(!navigator.mediaDevices){hint('এই পেজ HTTPS এ খুলতে হবে।');return}
 try{
-  // সরাসরি এবং সাধারণভাবে মাইক রিকোয়েস্ট (WebView এর জন্য)
-  mic=await navigator.mediaDevices.getUserMedia({audio:true})
+  // মাইক্রোফোন পারমিশন রিকোয়েস্ট (Infinix WebView এর জন্য একদম সাধারণ)
+  mic=await navigator.mediaDevices.getUserMedia({audio:true});
 }catch(e){
   hint('Mic error: ' + e.name);
   return;
