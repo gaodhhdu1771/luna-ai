@@ -18,13 +18,8 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Generate Android project
+      - name: Setup Gradle files
         run: |
-          set -e
-          test -f luna-ai.html || { echo "luna-ai.html repo-র root-এ নেই"; exit 1; }
-          mkdir -p app/src/main/assets app/src/main/res/values app/src/main/res/xml app/src/main/java/com/luna/ai
-          cp luna-ai.html app/src/main/assets/index.html
-
           cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
@@ -46,6 +41,7 @@ jobs:
           cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.2.2' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
           }
           EOF
 
@@ -54,9 +50,11 @@ jobs:
           org.gradle.jvmargs=-Xmx2g
           EOF
 
+          mkdir -p app
           cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
           }
           android {
               namespace 'com.luna.ai'
@@ -68,132 +66,23 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
               }
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
           }
           dependencies {
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'androidx.core:core-ktx:1.12.0'
               implementation 'androidx.webkit:webkit:1.8.0'
-          }
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.RECORD_AUDIO" />
-              <uses-permission android:name="android.permission.CAMERA" />
-              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-              <application
-                  android:label="Luna AI"
-                  android:usesCleartextTraffic="false"
-                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:configChanges="orientation|screenSize|keyboardHidden">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-                  <service
-                      android:name=".LunaAccessibilityService"
-                      android:label="Luna AI"
-                      android:exported="true"
-                      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-                      <intent-filter>
-                          <action android:name="android.accessibilityservice.AccessibilityService" />
-                      </intent-filter>
-                      <meta-data
-                          android:name="android.accessibilityservice"
-                          android:resource="@xml/accessibility_config" />
-                  </service>
-              </application>
-          </manifest>
-          EOF
-
-          cat > app/src/main/res/values/strings.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-              <string name="acc_desc">Luna AI accessibility support</string>
-          </resources>
-          EOF
-
-          cat > app/src/main/res/xml/accessibility_config.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-              android:accessibilityEventTypes="typeWindowStateChanged"
-              android:accessibilityFeedbackType="feedbackGeneric"
-              android:notificationTimeout="100"
-              android:description="@string/acc_desc" />
-          EOF
-
-          cat > app/src/main/java/com/luna/ai/LunaAccessibilityService.java <<'EOF'
-          package com.luna.ai;
-
-          import android.accessibilityservice.AccessibilityService;
-          import android.view.accessibility.AccessibilityEvent;
-
-          public class LunaAccessibilityService extends AccessibilityService {
-              @Override public void onAccessibilityEvent(AccessibilityEvent event) { }
-              @Override public void onInterrupt() { }
-          }
-          EOF
-
-          cat > app/src/main/java/com/luna/ai/MainActivity.java <<'EOF'
-          package com.luna.ai;
-
-          import android.Manifest;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.PermissionRequest;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebResourceRequest;
-          import android.webkit.WebResourceResponse;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import androidx.webkit.WebViewAssetLoader;
-
-          public class MainActivity extends Activity {
-              private WebView web;
-
-              @Override
-              protected void onCreate(Bundle b) {
-                  super.onCreate(b);
-                  requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA}, 1);
-                  web = new WebView(this);
-                  setContentView(web);
-                  WebSettings s = web.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setMediaPlaybackRequiresUserGesture(false);
-                  final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
-                      .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
-                      .build();
-                  web.setWebViewClient(new WebViewClient() {
-                      @Override
-                      public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
-                          return loader.shouldInterceptRequest(r.getUrl());
-                      }
-                  });
-                  web.setWebChromeClient(new WebChromeClient() {
-                      @Override
-                      public void onPermissionRequest(final PermissionRequest r) {
-                          runOnUiThread(new Runnable() {
-                              public void run() { r.grant(r.getResources()); }
-                          });
-                      }
-                  });
-                  web.loadUrl("https://appassets.androidplatform.net/assets/index.html");
-              }
-
-              @Override
-              public void onBackPressed() {
-                  if (web.canGoBack()) web.goBack(); else super.onBackPressed();
-              }
           }
           EOF
 
