@@ -22,14 +22,11 @@ import org.json.JSONObject
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val TOKEN = "luna"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
-        // সরাসরি কোডে WebView তৈরি করা হলো, XML লেআউটের দরকার নেই
         webView = WebView(this)
         setContentView(webView)
         
@@ -37,8 +34,12 @@ class MainActivity : AppCompatActivity() {
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        requestPerms()
-        setupWebView()
+        // পারমিশন চেক করা হচ্ছে
+        if (hasPerms()) {
+            setupWebView()
+        } else {
+            requestPerms()
+        }
 
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
@@ -46,15 +47,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun hasPerms(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+               ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+    }
+
     private fun requestPerms() {
-        val perms = arrayOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA
-        )
-        val miss = perms.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        val perms = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
+        ActivityCompat.requestPermissions(this, perms, 100)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100 && hasPerms()) {
+            setupWebView() // পারমিশন পেলে তবে ওয়েবভিউ লোড হবে
         }
-        if (miss.isNotEmpty()) ActivityCompat.requestPermissions(this, miss.toTypedArray(), 100)
     }
 
     private fun setupWebView() {
@@ -174,8 +181,15 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/luna-ai.html")
     }
 
+    // অ্যাপে ফিরে আসলে ভাসমান লুনা বন্ধ হয়ে যাবে
     override fun onResume() {
         super.onResume()
+        stopService(Intent(this, LunaFloatService::class.java))
+    }
+
+    // অ্যাপ থেকে বেরিয়ে গেলে (ব্যাকগ্রাউন্ডে) ভাসমান লুনা চালু হবে
+    override fun onPause() {
+        super.onPause()
         if (Settings.canDrawOverlays(this)) {
             startService(Intent(this, LunaFloatService::class.java))
         }
