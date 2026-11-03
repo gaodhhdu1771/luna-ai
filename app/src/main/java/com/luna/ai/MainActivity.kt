@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
+        // পারমিশন চেক
         if (hasPerms()) {
             setupWebView()
         } else {
@@ -78,7 +79,6 @@ class MainActivity : AppCompatActivity() {
         }
         
         webView.clearCache(true) // ক্যাশে ক্লিয়ার
-        webView.clearHistory()
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -94,11 +94,8 @@ class MainActivity : AppCompatActivity() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
                 runOnUiThread {
-                    if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                        request.grant(request.resources)
-                    } else {
-                        requestPerms()
-                    }
+                    // সরাসরি পারমিশন গ্রান্ট করা হচ্ছে
+                    request.grant(request.resources)
                 }
             }
         }
