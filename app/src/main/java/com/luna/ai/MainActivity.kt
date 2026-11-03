@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
+        // পারমিশন চেক
         if (hasPerms()) {
             setupWebView()
         } else {
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 100) {
-            setupWebView()
+            setupWebView() // পারমিশন দেওয়ার পরেই WebView লোড হবে
         }
     }
 
@@ -81,7 +82,6 @@ class MainActivity : AppCompatActivity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
-                // এখানে লিংক ফাঁকা কিনা চেক করা হয়েছে
                 val url = request?.url ?: return null
                 return loader.shouldInterceptRequest(url)
             }
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
-                request.grant(request.resources)
+                request.grant(request.resources) // WebView-তে মাইক/ক্যামেরা এক্সেস দেওয়া
             }
         }
 
@@ -189,11 +189,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // অ্যাপে ঢুকলে ফ্লোটিং লুনা বন্ধ হবে
         stopService(Intent(this, LunaFloatService::class.java))
     }
 
     override fun onPause() {
         super.onPause()
+        // অ্যাপ থেকে বেরোলে ফ্লোটিং লুনা চালু হবে
         if (Settings.canDrawOverlays(this)) {
             startService(Intent(this, LunaFloatService::class.java))
         }
