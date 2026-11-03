@@ -188,8 +188,16 @@ function bub(r,t){const d=document.createElement('div');d.className='bb '+r;d.te
 function openChat(){chatOpen=true;stopPlay();$('#chat').style.display='flex';$('#cs').textContent=on?'online':'send করলে connect হবে'}
 function sendChat(){const t=$('#ci').value.trim();if(!t)return;$('#ci').value='';bub('u',t);curU=curL=null;if(on)send({realtimeInput:{text:t}});else{pend=t;start()}}
 function sysText(){return MODES[cfg.mode||'gf']+SKILL+PHONE_SKILL()+soul+'\nতুমি লাইভ ক্যামেরা/স্ক্রিন দেখতে পারো। দরকারে save_memory/add_task ব্যবহার করো।\nMemory: '+(mem.join('; ')||'(empty)')+'\nTasks: '+tasks.map(t=>t.t).join('; ')}
-async function start(){if(!cfg.key){hint('Settings এ Muster API Key দাও।');openP('settings');return}
-if(!navigator.mediaDevices){hint('এই পেজ HTTPS এ খুলতে হবে।');return}try{mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}catch(e){hint('Mic permission দাও।');return}
+async function start(){
+if(!cfg.key){hint('Settings এ Muster API Key দাও।');openP('settings');return}
+if(!navigator.mediaDevices){hint('এই পেজ HTTPS এ খুলতে হবে।');return}
+try{
+  // সরাসরি এবং সাধারণভাবে মাইক রিকোয়েস্ট (WebView এর জন্য)
+  mic=await navigator.mediaDevices.getUserMedia({audio:true})
+}catch(e){
+  hint('Mic error: ' + e.name);
+  return;
+}
 ac=new AudioContext({sampleRate:16000});pc=new AudioContext({sampleRate:24000});await pc.resume();on=true;ready=false;$('#pw').classList.remove('off');hint('Connecting…');$('#go').textContent='STOP LUNA';
 ws=new WebSocket('wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key='+encodeURIComponent(cfg.key));
 ws.onopen=()=>send({setup:{model:'models/'+cfg.model,generationConfig:{responseModalities:['AUDIO'],thinkingConfig:{thinkingLevel:'minimal'},speechConfig:{...(useLang?{languageCode:'bn-IN'}:{}),voiceConfig:{prebuiltVoiceConfig:{voiceName:cfg.voice}}}},systemInstruction:{parts:[{text:sysText()}]},realtimeInputConfig:{automaticActivityDetection:{endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',startOfSpeechSensitivity:'START_SENSITIVITY_HIGH',silenceDurationMs:350,prefixPaddingMs:20}},inputAudioTranscription:{},outputAudioTranscription:{},
@@ -249,7 +257,6 @@ document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>openP(b.dataset.p));
 $('#modal').onclick=e=>{if(e.target.id=='modal')e.target.style.display='none'};
 $('#cgo').onclick=sendChat;$('#ci').onkeydown=e=>{if(e.key=='Enter')sendChat()};$('#cx2').onclick=()=>{chatOpen=false;$('#chat').style.display='none'};
 
-/* ===== ANDROID PHONE CONTROL + MINI MODE ===== */
 const PH=(typeof LunaAndroid!=='undefined')?LunaAndroid:null;
 const MINI=()=>document.documentElement.classList.contains('mini');
 window.LunaApp={setMini(v){document.documentElement.classList.toggle('mini',!!v);if(v){try{$('#modal').style.display='none'}catch(e){}}},toggle(){tog()},stop(){if(on)stop()},isOn(){return on}};
