@@ -37,7 +37,6 @@ class MainActivity : AppCompatActivity() {
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        // পারমিশন চেক
         if (hasPerms()) {
             setupWebView()
         } else {
@@ -74,7 +73,12 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             allowFileAccess = true
             allowContentAccess = true
+            // ক্যাশে বন্ধ করা হলো যাতে নতুন কোড লোড হয়
+            cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
         }
+        
+        webView.clearCache(true)
+        webView.clearHistory()
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -89,7 +93,10 @@ class MainActivity : AppCompatActivity() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
-                request.grant(request.resources) // WebView-তে মাইক/ক্যামেরা এক্সেস দেওয়া
+                // WebView-তে মাইক পারমিশন দেওয়ার জন্য runOnUiThread জরুরি
+                runOnUiThread {
+                    request.grant(request.resources)
+                }
             }
         }
 
@@ -184,18 +191,17 @@ class MainActivity : AppCompatActivity() {
             }
         }, "LunaAndroid")
 
-        webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html")
+        // ?v=2 যোগ করা হলো যাতে ব্রাউজার নতুন কোড লোড করে
+        webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?v=2")
     }
 
     override fun onResume() {
         super.onResume()
-        // অ্যাপে ঢুকলে ফ্লোটিং লুনা বন্ধ হবে
         stopService(Intent(this, LunaFloatService::class.java))
     }
 
     override fun onPause() {
         super.onPause()
-        // অ্যাপ থেকে বেরোলে ফ্লোটিং লুনা চালু হবে
         if (Settings.canDrawOverlays(this)) {
             startService(Intent(this, LunaFloatService::class.java))
         }
