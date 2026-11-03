@@ -28,22 +28,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContentView(R.layout.activity_main)
+        
+        // সরাসরি কোডে WebView তৈরি করা হলো, XML লেআউটের দরকার নেই
+        webView = WebView(this)
+        setContentView(webView)
+        
         val c = WindowInsetsControllerCompat(window, window.decorView)
         c.hide(WindowInsetsCompat.Type.systemBars())
-        c.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
         requestPerms()
-
-        webView = findViewById(R.id.webView)
         setupWebView()
 
         if (!Settings.canDrawOverlays(this)) {
-            startActivity(Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            ))
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            startActivity(intent)
         }
     }
 
@@ -101,13 +100,14 @@ class MainActivity : AppCompatActivity() {
                 when (name) {
                     "open_app" -> openApp(args.optString("name"), reply)
                     "open_url" -> {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url"))))
+                        runOnUiThread {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url"))))
+                        }
                         reply("ok")
                     }
                     "read_screen" -> reply(svc?.readScreen() ?: "")
                     "click_text" -> svc?.clickText(args.optString("text"), reply)
-                    "tap" -> svc?.tap(args.optDouble("x").toFloat(),
-                                     args.optDouble("y").toFloat(), reply)
+                    "tap" -> svc?.tap(args.optDouble("x").toFloat(), args.optDouble("y").toFloat(), reply)
                     "swipe" -> svc?.swipe(
                         args.optDouble("x1").toFloat(), args.optDouble("y1").toFloat(),
                         args.optDouble("x2").toFloat(), args.optDouble("y2").toFloat(),
@@ -133,20 +133,14 @@ class MainActivity : AppCompatActivity() {
             @JavascriptInterface
             fun openOverlay(token: String) {
                 runOnUiThread {
-                    startActivity(Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
-                    ))
+                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
                 }
             }
 
             @JavascriptInterface
             fun openAppInfo(token: String) {
                 runOnUiThread {
-                    startActivity(Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:$packageName")
-                    ))
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
                 }
             }
 
