@@ -160,10 +160,11 @@ class MainActivity : AppCompatActivity() {
                         reply("Speaker turned ON")
                     }
                     "auto_reply" -> {
-                        val app = args.optString("app")
                         val sender = args.optString("sender")
                         val message = args.optString("message")
-                        reply(svc?.autoReply(app, sender, message) ?: "Error")
+                        // সাইলেন্ট রিপ্লাই (অ্যাপ ওপেন হবে না)
+                        val success = LunaNotificationService.instance?.sendSilentReply(sender, message) ?: false
+                        reply(if (success) "Replied silently" else "Reply failed")
                     }
                     "control_volume" -> {
                         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -183,7 +184,6 @@ class MainActivity : AppCompatActivity() {
                         val query = args.optString("name").lowercase().trim()
                         val pm = packageManager
                         
-                        // ১. প্রথমে কিছু কমন অ্যাপের প্যাকেজ নেম (এতে দ্রুত কাজ হয়)
                         val knownPkgs = mapOf(
                             "youtube" to "com.google.android.youtube", "whatsapp" to "com.whatsapp",
                             "facebook" to "com.facebook.katana", "messenger" to "com.facebook.orca",
@@ -197,7 +197,6 @@ class MainActivity : AppCompatActivity() {
                         
                         var targetPkg = knownPkgs.entries.firstOrNull { query.contains(it.key) }?.value
                         
-                        // ২. যদি কমন লিস্টে না থাকে, তবে ফোনের সব অ্যাপের ভেতর খুঁজবে
                         if (targetPkg == null) {
                             val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
                             val appInfo = apps.firstOrNull { 
