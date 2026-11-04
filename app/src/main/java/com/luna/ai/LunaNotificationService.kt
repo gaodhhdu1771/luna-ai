@@ -1,11 +1,20 @@
 package com.luna.ai
 
 import android.app.Notification
+import android.app.PendingIntent
+import android.app.RemoteInput
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 
 class LunaNotificationService : NotificationListenerService() {
+
+    companion object {
+        // মেসেজের নোটিফিকেশন সেভ করে রাখবে রিপ্লাই দেওয়ার জন্য
+        val recentMessages = mutableMapOf<String, StatusBarNotification>()
+    }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
@@ -30,7 +39,34 @@ class LunaNotificationService : NotificationListenerService() {
                 sbn.packageName
             }
 
+            // সাইলেন্ট রিপ্লাইয়ের জন্য সেভ করে রাখা
+            recentMessages[title] = sbn
             MainActivity.sendMessageToWebView(appName, title, finalText)
         }
+    }
+
+    // নতুন ফাংশন: নোটিফিকেশন থেকেই সাইলেন্টলি মেসেজ পাঠাবে
+    fun sendSilentReply(sender: String, message: String): Boolean {
+        val sbn = recentMessages[sender] ?: return false
+        val actions = sbn.notification.actions ?: return false
+        
+        for (action in actions) {
+            val remoteInputs = action.remoteInputs
+            if (remoteInputs != null && remoteInputs.isNotEmpty()) {
+                val intent = Intent()
+                val bundle = Bundle()
+                for (remoteInput in remoteInputs) {
+                    bundle.putCharSequence(remoteInput.resultKey, message)
+                }
+                RemoteInput.addResultsToIntent(remoteInputs, intent, bundle)
+                try {
+                    action.actionIntent.send(applicationContext, 0, intent)
+                    return true
+                } catch (e: PendingIntent.CanceledException) {
+                    return false
+                }
+            }
+        }
+        return false
     }
 }
