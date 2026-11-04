@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
         var floatWebView: WebView? = null
 
         fun sendMessageToWebView(app: String, sender: String, text: String) {
-            // JSONObject.quote ব্যবহার করা হয়েছে যাতে কোটেশন থাকলেও JS ক্র্যাশ না করে
             val js = "window.onNewMessage(${JSONObject.quote(app)}, ${JSONObject.quote(sender)}, ${JSONObject.quote(text)});"
             instance?.runOnUiThread { instance?.webView?.evaluateJavascript(js, null) }
             floatWebView?.post { floatWebView?.evaluateJavascript(js, null) }
