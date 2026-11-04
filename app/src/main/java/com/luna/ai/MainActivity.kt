@@ -145,7 +145,6 @@ class MainActivity : AppCompatActivity() {
                         } catch (e: Exception) { reply("Call error: ${e.message}") }
                     }
                     "accept_call" -> {
-                        // স্ক্রিনে "Answer" বা "Accept" বাটন খুঁজে ক্লিক করবে
                         svc?.clickText("Answer") { r ->
                             if (r == "ok" || r == "clicked") reply("Call accepted")
                             else {
@@ -183,10 +182,11 @@ class MainActivity : AppCompatActivity() {
                     "open_app" -> {
                         val name = args.optString("name").lowercase().trim()
                         val pm = packageManager
-                        // ফোনের সব অ্যাপের ভেতরে নাম খুঁজবে
+                        // ফোনের সব অ্যাপের ভেতরে নাম বা প্যাকেজ নেম খুঁজবে
                         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
                         val app = apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase() == name } 
                                ?: apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase().contains(name) }
+                               ?: apps.firstOrNull { it.packageName.lowercase().contains(name) }
                         
                         if (app == null) reply("App not found on phone") else {
                             try { 
