@@ -22,6 +22,7 @@ class LunaFloatService : Service() {
 
     private lateinit var wm: WindowManager
     private var view: FrameLayout? = null
+    private var closeView: TextView? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -35,7 +36,7 @@ class LunaFloatService : Service() {
     private fun showFloat() {
         if (view != null) return
 
-        val size = 160 // সার্কেলের সাইজ
+        val size = 160
         val params = WindowManager.LayoutParams(
             size, size,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -53,7 +54,7 @@ class LunaFloatService : Service() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             setBackgroundColor(Color.TRANSPARENT)
-            setLayerType(View.LAYER_TYPE_HARDWARE, null) // ট্রান্সপারেন্ট ব্যাকগ্রাউন্ডের জন্য
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
             
             val loader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this@LunaFloatService))
@@ -67,31 +68,29 @@ class LunaFloatService : Service() {
             }
             loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?mini=1")
         }
+        
+        MainActivity.floatWebView = web
 
-        // ছোট লাল ক্রস (X) বাটন তৈরি
-        val closeBtn = TextView(this).apply {
+        val close = TextView(this).apply {
             text = "✕"
             setTextColor(Color.WHITE)
-            textSize = 12f
+            textSize = 20f
             gravity = Gravity.CENTER
-            setTypeface(null, android.graphics.Typeface.BOLD)
             val bg = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#FF3B4E")) // লাল রঙ
-                setStroke(2, Color.WHITE)
+                setColor(Color.parseColor("#FF3B4E"))
+                setStroke(3, Color.WHITE)
             }
             background = bg
-            val sz = 50
+            visibility = View.GONE 
+            val sz = 60
             val lp = FrameLayout.LayoutParams(sz, sz)
-            lp.gravity = Gravity.TOP or Gravity.END
-            lp.setMargins(0, 0, 0, 0)
+            lp.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            lp.bottomMargin = 50
             layoutParams = lp
-            setOnClickListener {
-                stopSelf() // ক্লিক করলেই ভাসমান লুনা বন্ধ হয়ে যাবে
-            }
+            setOnClickListener { stopSelf() }
         }
 
-        // লুনাকে ড্র্যাগ করে সরানোর জন্য টাচ লিসেনার
         web.setOnTouchListener(object : View.OnTouchListener {
             var initX = 0; var initY = 0
             var tX = 0f; var tY = 0f
@@ -107,17 +106,30 @@ class LunaFloatService : Service() {
                     MotionEvent.ACTION_MOVE -> {
                         val dx = (e.rawX - tX).toInt()
                         val dy = (e.rawY - tY).toInt()
-                        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) dragging = true
+                        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                            dragging = true
+                            close.visibility = View.VISIBLE
+                        }
                         if (dragging) {
                             params.x = initX - dx
                             params.y = initY - dy
                             wm.updateViewLayout(root, params)
+                            
+                            if (e.rawY > resources.displayMetrics.heightPixels - 200) {
+                                close.setBackgroundColor(Color.parseColor("#FF0000"))
+                            } else {
+                                close.setBackgroundColor(Color.parseColor("#FF3B4E"))
+                            }
                             return true
                         }
                     }
                     MotionEvent.ACTION_UP -> {
-                        if (!dragging) {
-                            // শুধু ট্যাপ করলে মেইন অ্যাপ ওপেন হবে
+                        if (dragging) {
+                            close.visibility = View.GONE
+                            if (e.rawY > resources.displayMetrics.heightPixels - 200) {
+                                stopSelf()
+                            }
+                        } else {
                             val intent = Intent(this@LunaFloatService, MainActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
@@ -130,8 +142,8 @@ class LunaFloatService : Service() {
         })
 
         root.addView(web, FrameLayout.LayoutParams(-1, -1))
-        root.addView(closeBtn) // ক্রস বাটন যোগ করা হলো
-
+        root.addView(close)
+        closeView = close
         view = root
         wm.addView(root, params)
     }
@@ -139,6 +151,7 @@ class LunaFloatService : Service() {
     override fun onDestroy() {
         view?.let { wm.removeView(it) }
         view = null
+        MainActivity.floatWebView = null
         super.onDestroy()
     }
 
