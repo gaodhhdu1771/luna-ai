@@ -75,11 +75,11 @@ class LunaAccessibilityService : AccessibilityService() {
     fun scroll(dir: String, cb: (String) -> Unit) {
         val dm = resources.displayMetrics
         val w = dm.widthPixels.toFloat(); val h = dm.heightPixels.toFloat()
-        when (dir) {
-            "up" -> swipe(w/2, h*0.75f, w/2, h*0.25f, 300, cb)
-            "down" -> swipe(w/2, h*0.25f, w/2, h*0.75f, 300, cb)
-            "left" -> swipe(w*0.8f, h/2, w*0.2f, h/2, 300, cb)
-            "right" -> swipe(w*0.2f, h/2, w*0.8f, h/2, 300, cb)
+        when (dir.lowercase()) {
+            "up", "উপরে" -> swipe(w/2, h*0.75f, w/2, h*0.25f, 300, cb)
+            "down", "নিচে" -> swipe(w/2, h*0.25f, w/2, h*0.75f, 300, cb)
+            "left", "বামে" -> swipe(w*0.8f, h/2, w*0.2f, h/2, 300, cb)
+            "right", "ডানে" -> swipe(w*0.2f, h/2, w*0.8f, h/2, 300, cb)
             else -> cb("bad direction")
         }
     }
@@ -106,7 +106,13 @@ class LunaAccessibilityService : AccessibilityService() {
             "enter" -> {
                 val root = rootInActiveWindow
                 val f = root?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-                cb(if (f?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) "ok" else "no field")
+                // এন্টার চাপার জন্য KEYCODE_ENTER ইভেন্ট পাঠানো
+                if (f != null) {
+                    val args = Bundle().apply {
+                        putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_KEY_EVENT, android.view.KeyEvent.KEYCODE_ENTER)
+                    }
+                    cb(if (f.performAction(AccessibilityNodeInfo.ACTION_CLICK, args)) "ok" else "no field")
+                } else cb("no field")
                 return
             }
             else -> return cb("unknown key")
