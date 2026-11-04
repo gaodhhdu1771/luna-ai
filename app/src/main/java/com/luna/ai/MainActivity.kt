@@ -63,11 +63,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasPerms(): Boolean {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-               ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+               ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+               ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPerms() {
-        val perms = arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA, Manifest.permission.ANSWER_PHONE_CALLS)
+        val perms = arrayOf(
+            Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA, 
+            Manifest.permission.ANSWER_PHONE_CALLS, Manifest.permission.CALL_PHONE
+        )
         ActivityCompat.requestPermissions(this, perms, 100)
     }
 
@@ -127,6 +131,35 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 when (name) {
+                    "make_call" -> {
+                        val number = args.optString("number")
+                        try {
+                            val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                                startActivity(intent)
+                                reply("Calling $number")
+                            } else {
+                                reply("Permission denied for calling")
+                            }
+                        } catch (e: Exception) { reply("Call error: ${e.message}") }
+                    }
+                    "accept_call" -> {
+                        // স্ক্রিনে "Answer" বা "Accept" বাটন খুঁজে ক্লিক করবে
+                        svc?.clickText("Answer") { r ->
+                            if (r == "ok" || r == "clicked") reply("Call accepted")
+                            else {
+                                svc?.clickText("Accept") { r2 ->
+                                    reply(if (r2 == "ok") "Call accepted" else "Could not find answer button")
+                                }
+                            }
+                        } ?: reply("Accessibility service not running")
+                    }
+                    "speaker_on" -> {
+                        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        am.isSpeakerphoneOn = true
+                        reply("Speaker turned ON")
+                    }
                     "auto_reply" -> {
                         val app = args.optString("app")
                         val sender = args.optString("sender")
@@ -147,21 +180,23 @@ class MainActivity : AppCompatActivity() {
                         val charging = bm.isCharging
                         reply("Battery: $level%, Charging: $charging")
                     }
-                    "accept_call" -> {
-                        try {
-                            val tm = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
-                            if (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ANSWER_PHONE_CALLS) == PackageManager.PERMISSION_GRANTED) {
-                                tm.acceptRingingCall()
-                                reply("Call accepted")
-                            } else reply("No permission to accept call")
-                        } catch (e: Exception) { reply("Call error: ${e.message}") }
-                    }
                     "open_app" -> {
-                        val pkg = args.optString("name").lowercase()
-                        val pkgs = mapOf("youtube" to "com.google.android.youtube", "whatsapp" to "com.whatsapp", "chrome" to "com.android.chrome", "facebook" to "com.facebook.katana", "messenger" to "com.facebook.orca", "instagram" to "com.instagram.android", "tiktok" to "com.zhiliaoapp.musically", "camera" to "com.android.camera", "settings" to "com.android.settings", "gmail" to "com.google.android.gm", "telegram" to "org.telegram.messenger", "gallery" to "com.android.gallery3d", "play" to "com.android.vending", "capcut" to "com.lemon.lvoverseas")
-                        val p = pkgs[pkg] ?: pkgs.entries.firstOrNull { pkg.contains(it.key) }?.value
-                        if (p == null) reply("App not found") else {
-                            try { val i = packageManager.getLaunchIntentForPackage(p); startActivity(i); reply("ok") } catch (e: Exception) { reply("Error") }
+                        val name = args.optString("name").lowercase().trim()
+                        val pm = packageManager
+                        // ফোনের সব অ্যাপের ভেতরে নাম খুঁজবে
+                        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                        val app = apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase() == name } 
+                               ?: apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase().contains(name) }
+                        
+                        if (app == null) reply("App not found on phone") else {
+                            try { 
+                                val i = pm.getLaunchIntentForPackage(app.packageName)
+                                if (i != null) {
+                                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(i)
+                                    reply("ok") 
+                                } else reply("Cannot launch app")
+                            } catch (e: Exception) { reply("Error") }
                         }
                     }
                     "open_url" -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url")))); reply("ok") }
