@@ -122,8 +122,9 @@ if(location.search.includes('mini=1'))document.documentElement.classList.add('mi
 const $=s=>document.querySelector(s);
 const S=(k,d)=>{try{const v=localStorage.getItem('luna_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const W=(k,v)=>{try{localStorage.setItem('luna_'+k,JSON.stringify(v))}catch(e){}};
-let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-2.0-flash-exp', vision:true, taskTime:'', taskPrompt:''});
-if(cfg.model !== 'gemini-2.0-flash-exp'){ cfg.model = 'gemini-2.0-flash-exp'; W('cfg', cfg); } // Force correct model
+// আপনি যে মডেলটি চেয়েছেন সেটি সেট করা হলো
+let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-3.1-flash-live-preview', vision:true, taskTime:'', taskPrompt:''});
+if(cfg.model !== 'gemini-3.1-flash-live-preview'){ cfg.model = 'gemini-3.1-flash-live-preview'; W('cfg', cfg); }
 if(!cfg.gnews)cfg.gnews='1859b59abdb4444aa520afab7109e3dc';
 if(!cfg.mode)cfg.mode='gf';
 
@@ -206,20 +207,22 @@ const SKILL=`\n\n**বাধ্যতামূলক নির্দেশ (Abso
 **সার্চ করার নিয়ম:**
 - যদি ব্যবহারকারী বলে "সার্চ করো", তবে প্রথমে read_screen করে সার্চ বক্স খুঁজে বের করবে, click_text করবে, তারপর type_text দিয়ে লিখবে। **সবশেষে অবশ্যই press (key: "enter") অথবা সার্চ বাটনে click_text করবে।** শুধু টাইপ করে থেমে যাবে না।
 
-**App Control & Search:**
+**App Control & Account Creation:**
 - ব্যবহারকারী যদি বলে "ইউটিউব ওপেন করো", তবে সাথে সাথে open_app (name: "youtube") টুল কল করো। 
+- **নতুন অ্যাকাউন্ট তৈরি:** ব্যবহারকারী যদি বলে "ফেসবুক/ইউটিউব/ইনস্টাগ্রামে নতুন আইডি খোলো", তবে open_app করে read_screen দিয়ে 'Create Account' বা 'Sign Up' বাটনে ক্লিক করবে। তারপর type_text দিয়ে নাম, ইমেইল, পাসওয়ার্ড টাইপ করবে এবং OTP এলে ব্যবহারকারীকে জানাবে।
 
-**CapCut AI Video SOP (নতুন):**
+**CapCut AI Video SOP:**
 ১. open_app (capcut)।
 ২. read_screen করবে। স্ক্রিনে "AI Lab" বা "AI Tools" বা "AI Video" অপশন খুঁজে বের করবে।
-৩. সেই অপশনে click_text করবে। (সরাসরি "Create a video"-তে যাবে না)।
+৩. সেই অপশনে click_text করবে। 
 ৪. read_screen করে প্রম্পট লেখার জায়গা খুঁজে বের করবে।
 ৫. type_text দিয়ে ব্যবহারকারীর দেওয়া প্রম্পট লিখবে।
 ৬. 'Generate' বা 'Create' বাটনে ক্লিক করবে।
 ৭. wait (60s) করবে, স্ক্রিন রিড করে জেনারেশন শেষ হলে Export বা Upload করবে।
 
-**Trading Knowledge:**
-- ব্যবহারকারী ট্রেডিং সিগন্যাল চাইলে, চার্ট দেখে ১ সেকেন্ডে Support/Resistance এবং Pin Bar প্যাটার্ন অ্যানালাইসিস করে এন্ট্রি (Call/Put) নেওয়ার পরামর্শ দেবে।
+**Trading Knowledge (Millisecond Analysis):**
+- ব্যবহারকারী যদি ট্রেডিং সিগন্যাল বা Up/Down এন্ট্রি চাইতে বলে, তবে চার্ট (স্ক্রিনশেয়ার বা ক্যামেরা) দেখে ১ সেকেন্ডে Support/Resistance, Pin Bar এবং Engulfing প্যাটার্ন অ্যানালাইসিস করবে। 
+- পরিষ্কার সিগন্যাল পেলে সরাসরি বলবে "Call/Up নিন" বা "Put/Down নিন"।
 
 **Auto Reply:**
 মেসেজ নোটিফিকেশন পেলে ব্যবহারকারীকে বলবে। ১ মিনিট পরে auto_reply টুল ব্যবহার করবে। সাইলেন্টলি রিপ্লাই পাঠাবে: "এডমিন ভাই এখন অনলাইনে নাই যা বলতে হয় আমাকে বলুন আমি লুনা ai আপনার নেত্রী দিনের সঙ্গী"।`;
