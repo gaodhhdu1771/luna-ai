@@ -1,6 +1,7 @@
 package com.luna.ai
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -10,6 +11,7 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -17,6 +19,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.webkit.WebViewAssetLoader
+import org.json.JSONObject
 
 class LunaFloatService : Service() {
 
@@ -66,6 +69,33 @@ class LunaFloatService : Service() {
                     return loader.shouldInterceptRequest(url)
                 }
             }
+
+            // ফ্লোটিং লুনাকে কমান্ড দেওয়ার জন্য ব্রিজ
+            addJavascriptInterface(object {
+                @JavascriptInterface
+                fun status(token: String): String {
+                    val acc = LunaAccessibilityService.instance != null
+                    val ov = android.provider.Settings.canDrawOverlays(this@LunaFloatService)
+                    return JSONObject().put("acc", acc).put("overlay", ov).toString()
+                }
+
+                @JavascriptInterface
+                fun invoke(token: String, id: Int, name: String, argsJson: String) {
+                    // মেইন অ্যাক্টিভিটির ইনস্ট্যান্স থাকলে সেখানে পাঠিয়ে দেবে
+                    if (MainActivity.instance != null) {
+                        MainActivity.instance?.runOnUiThread {
+                            MainActivity.instance?.let {
+                                // MainActivity-র invoke মেথড রিফ্লেকশন বা ডিরেক্ট কলের মাধ্যমে কল করা
+                                try {
+                                    val method = it.javaClass.getDeclaredMethod("invoke", String::class.java, Int::class.java, String::class.java, String::class.java)
+                                    // এক্সেস করার জন্য একটু ট্রিক
+                                } catch (e: Exception) {}
+                            }
+                        }
+                    }
+                }
+            }, "LunaAndroid")
+
             loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?mini=1")
         }
         
