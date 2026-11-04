@@ -180,23 +180,44 @@ class MainActivity : AppCompatActivity() {
                         reply("Battery: $level%, Charging: $charging")
                     }
                     "open_app" -> {
-                        val name = args.optString("name").lowercase().trim()
+                        val query = args.optString("name").lowercase().trim()
                         val pm = packageManager
-                        // ফোনের সব অ্যাপের ভেতরে নাম বা প্যাকেজ নেম খুঁজবে
-                        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                        val app = apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase() == name } 
-                               ?: apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase().contains(name) }
-                               ?: apps.firstOrNull { it.packageName.lowercase().contains(name) }
                         
-                        if (app == null) reply("App not found on phone") else {
-                            try { 
-                                val i = pm.getLaunchIntentForPackage(app.packageName)
-                                if (i != null) {
-                                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    startActivity(i)
-                                    reply("ok") 
-                                } else reply("Cannot launch app")
-                            } catch (e: Exception) { reply("Error") }
+                        // ১. প্রথমে কিছু কমন অ্যাপের প্যাকেজ নেম (এতে দ্রুত কাজ হয়)
+                        val knownPkgs = mapOf(
+                            "youtube" to "com.google.android.youtube", "whatsapp" to "com.whatsapp",
+                            "facebook" to "com.facebook.katana", "messenger" to "com.facebook.orca",
+                            "instagram" to "com.instagram.android", "tiktok" to "com.zhiliaoapp.musically",
+                            "chrome" to "com.android.chrome", "camera" to "com.android.camera",
+                            "settings" to "com.android.settings", "play" to "com.android.vending",
+                            "playstore" to "com.android.vending", "capcut" to "com.lemon.lvoverseas",
+                            "phone" to "com.android.dialer", "gallery" to "com.android.gallery3d",
+                            "telegram" to "org.telegram.messenger", "gmail" to "com.google.android.gm"
+                        )
+                        
+                        var targetPkg = knownPkgs.entries.firstOrNull { query.contains(it.key) }?.value
+                        
+                        // ২. যদি কমন লিস্টে না থাকে, তবে ফোনের সব অ্যাপের ভেতর খুঁজবে
+                        if (targetPkg == null) {
+                            val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                            val appInfo = apps.firstOrNull { 
+                                val label = pm.getApplicationLabel(it).toString().lowercase()
+                                label == query || label.contains(query) || it.packageName.lowercase().contains(query)
+                            }
+                            targetPkg = appInfo?.packageName
+                        }
+                        
+                        if (targetPkg != null) {
+                            try {
+                                val intent = pm.getLaunchIntentForPackage(targetPkg)
+                                if (intent != null) {
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(intent)
+                                    reply("ok")
+                                } else reply("App cannot be launched")
+                            } catch (e: Exception) { reply("Launch error") }
+                        } else {
+                            reply("App not found")
                         }
                     }
                     "open_url" -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url")))); reply("ok") }
