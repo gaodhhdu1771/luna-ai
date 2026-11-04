@@ -131,13 +131,11 @@ let soul=S('soul3','');
 let mem=S('mem',[]),tasks=S('tasks',[{t:'Finish voice demo',d:0},{t:'Release desktop version',d:0},{t:'Upload video to TikTok',d:0}]);
 let lastBuild=null,ws,on=false,muted=false,mic,ac,proc,pc,nextT=0,level=0,state='IDLE',vs,vt,facing='user',srcs=[],mode=null,fresh=true,autoReplyTimer=null;
 
-// টাস্ক শিডিউলার (প্রতি ১ মিনিটে চেক করবে)
 setInterval(()=>{
   if(!on || !cfg.taskTime || !cfg.taskPrompt) return;
   const now = new Date();
   const currentTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   if(currentTime === cfg.taskTime){
-    // ওয়ান টাইম টাস্ক, তাই ট্রিগার করার পর ক্লিয়ার করে দেবে
     cfg.taskTime = ''; W('cfg',cfg);
     send({realtimeInput:{text:`SYSTEM ALERT: It is ${currentTime}. Time to execute the scheduled task: ${cfg.taskPrompt}. Please do it now.`}});
   }
@@ -310,9 +308,7 @@ let _pid=0;const _pp={};
 window.__lunaRes=(id,r)=>{const f=_pp[id];if(f){delete _pp[id];f(r)}};
 window.onNewMessage = function(app, sender, text) {
     if(!on) return;
-    // লুনা মেসেজটি পড়ে শোনাবে
     send({realtimeInput:{text:`SYSTEM ALERT: New message on ${app} from ${sender} saying: "${text}". Please read it aloud to the boss and ask if he wants to reply.`}});
-    // ১০ সেকেন্ডের টাইমার, এর মধ্যে ইউজার কথা না বললে অটো রিপ্লাই যাবে
     clearTimeout(autoReplyTimer);
     autoReplyTimer = setTimeout(() => {
         send({realtimeInput:{text:`SYSTEM ALERT: The boss didn't reply. Use the auto_reply tool to send the default message to ${sender} on ${app}.`}});
