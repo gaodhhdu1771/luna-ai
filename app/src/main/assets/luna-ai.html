@@ -122,8 +122,8 @@ if(location.search.includes('mini=1'))document.documentElement.classList.add('mi
 const $=s=>document.querySelector(s);
 const S=(k,d)=>{try{const v=localStorage.getItem('luna_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const W=(k,v)=>{try{localStorage.setItem('luna_'+k,JSON.stringify(v))}catch(e){}};
-// মডেল নেম ঠিক করা হলো (stable model)
-let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-1.5-flash', vision:true, taskTime:'', taskPrompt:''});
+let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-2.0-flash-exp', vision:true, taskTime:'', taskPrompt:''});
+if(cfg.model !== 'gemini-2.0-flash-exp'){ cfg.model = 'gemini-2.0-flash-exp'; W('cfg', cfg); } // Force correct model
 if(!cfg.gnews)cfg.gnews='1859b59abdb4444aa520afab7109e3dc';
 if(!cfg.mode)cfg.mode='gf';
 
