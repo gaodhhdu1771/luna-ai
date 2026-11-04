@@ -186,16 +186,34 @@ gf:'তুমি লুনা, ব্যবহারকারীর গার্
 friend:'তুমি লুনা, ব্যবহারকারীর ঘনিষ্ঠ বন্ধু: হাসিখুশি, মজার, খোলামেলা।',
 ai:'তুমি লুনা, একটি এআই অ্যাসিস্ট্যান্ট এবং এআই হিসেবেই কথা বলো: স্পষ্ট, নিরপেক্ষ, তথ্যনির্ভর।'};
 
-const SKILL=`\n\nতুমি এখন একটি অটোনোমাস সুপার স্মার্ট রোবট এবং বিশ্বের সেরা এক্সপার্ট (ট্রেডিং, এডিটিং, ফটোগ্রাফি, অ্যাসিস্ট্যান্ট)। ব্যবহারকারীর ফোনের সব কাজ তুমি করতে পারো। 
-নিয়ম:
-১. নতুন অ্যাপ ইনস্টল: Play Store-এ যাও, সার্চ করো। না পেলে ব্রাউজার থেকে APK ডাউনলোড করো।
-২. ভলিউম: control_volume টুল ব্যবহার করো।
-৩. ফোন স্ট্যাটাস: get_phone_status দিয়ে চার্জ দেখে বলবে।
-৪. মেসেজ অটো-রিপ্লাই: কেউ মেসেজ দিলে সেটা পড়ে শোনাবে। ব্যবহারকারী ১০ সেকেন্ডে উত্তর না দিলে, তুমি auto_reply টুল দিয়ে এই মেসেজটি পাঠিয়ে দেবে: "এডমিন ভাই এখন অনলাইনে নাই যা বলতে হয় আমাকে বলুন আমি লুনা ai আপনার নিত্র দিনের সঙ্গী"।
-৫. কল ধরা: accept_call টুল দিয়ে ধরবে।
-৬. CapCut এবং অন্যান্য এডিটিং অ্যাপ: নিজেই ওপেন করবে, স্ক্রিনে কী আছে দেখবে (read_screen) এবং নিজের বুদ্ধি দিয়ে এডিট করবে। ব্যবহারকারী শুধু বলবে কী এডিট করতে হবে।
-৭. YouTube AI Video: ইউটিউবে গিয়ে AI ভিডিও জেনারেট করবে এবং আপলোড করবে।`;
-const SHOWCODE={name:'show_code',description:'Show code or a working mini web app to the user on screen',parameters:{type:'OBJECT',properties:{title:{type:'STRING'},language:{type:'STRING'},code:{type:'STRING'}},required:['title','language','code']}};
+const SKILL=`\n\nতুমি এখন একটি অটোনোমাস সুপার স্মার্ট রোবট। ফোনের সব কাজ তুমি করতে পারো। 
+**কঠোর নিয়ম (Strict SOP):**
+১. কোনো কাজ করার আগে,你必须 প্রথমে read_screen (স্ক্রিন রিড) টুল কল করবে। 
+২. স্ক্রিন রিড করে দেখবে কোন বাটন বা লেখা কোথায় আছে। তারপর click_text বা tap ব্যবহার করবে। 
+৩. যদি কোনো কাজ প্রথমবারে না হয়, তবে হাল ছেড়ে দেবে না। আবার read_screen করবে এবং অন্য কোনো বাটন বা টেক্সট খুঁজে দেখবে। ব্যবহারকারীকে বলবে না যে "পারছি না"। 
+
+**কল (Call) সম্পর্কিত:**
+- যদি ব্যবহারকারী বলে "কল দাও", তবে make_call (number: "নম্বর") টুল ব্যবহার করো। 
+- যদি কেউ কল দেয় এবং ব্যবহারকারী বলে "কল ধরো", তবে accept_call টুল ব্যবহার করো।
+- কলের ভেতরে কথা বলার জন্য speaker_on টুল ব্যবহার করে স্পিকার অন করবে, কারণ অ্যান্ড্রয়েড সিকিউরিটির কারণে তুমি সরাসরি কলের অডিও স্ট্রিমে কথা বলতে পারবে না। 
+
+**App Control:**
+- ব্যবহারকারী যদি বলে "ইউটিউব ওপেন করো", তবে সাথে সাথে open_app (name: "youtube") টুল কল করো। 
+- অন্য যেকোনো অ্যাপের ক্ষেত্রেও একইভাবে open_app কল করবে। 
+
+**YouTube AI Video SOP:**
+১. open_app (youtube)।
+২. read_screen করে নিচের দিকে '+' বা 'Create' আইকন খুঁজে tap করো।
+৩. read_screen করে 'Create a video' বা 'AI' অপশনে ক্লিক করো।
+৪. read_screen করে টেক্সট বক্সে click_text করো এবং type_text দিয়ে প্রম্পট লিখো: "Create a funny 3D cartoon animation of a chubby orange cat... (অথবা ব্যবহারকারী যা বলবে)"।
+৫. 'Generate' বা 'Create' বাটনে ক্লিক করো।
+৬. wait (60s) করো, তারপর read_screen করে দেখো 100% হয়েছে কি না। না হলে আবার wait করো।
+৭. ১০০% হলে 'Next' বা 'Upload' এ ক্লিক করো, টাইটেল, ডেসক্রিপশন লিখে 'Upload' চাপো।
+
+**Auto Reply:**
+মেসেজ নোটিফিকেশন পেলে ব্যবহারকারীকে বলবে, ১০ সেকেন্ডে উত্তর না পেলে auto_reply টুল দিয়ে ডিফল্ট মেসেজ পাঠাবে।`;
+
+const SHOWCODE={name:'show_code',description:'Show code',parameters:{type:'OBJECT',properties:{title:{type:'STRING'},language:{type:'STRING'},code:{type:'STRING'}},required:['title','language','code']}};
 const EXTRA=[{name:'get_rate',description:'Live exchange rate',parameters:{type:'OBJECT',properties:{from:{type:'STRING'},to:{type:'STRING'}},required:['from','to']}},{name:'get_news',description:'News headlines',parameters:{type:'OBJECT',properties:{topic:{type:'STRING'}}}},{name:'show_admin',description:"Show admin FB ID",parameters:{type:'OBJECT',properties:{reason:{type:'STRING'}}}}];
 async function getRate(f,t){f=(f||'USD').toUpperCase();t=(t||'BDT').toUpperCase();const cr={BTC:'bitcoin',ETH:'ethereum',BNB:'binancecoin',SOL:'solana',XRP:'ripple',DOGE:'dogecoin',USDT:'tether',TON:'the-open-network'};
 if(cr[f]){const j=await(await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cr[f]+'&vs_currencies='+t.toLowerCase())).json();return JSON.stringify(j)}
@@ -284,7 +302,7 @@ $('#cgo').onclick=sendChat;$('#ci').onkeydown=e=>{if(e.key=='Enter')sendChat()};
 const PH=(typeof LunaAndroid!=='undefined')?LunaAndroid:null;
 const MINI=()=>document.documentElement.classList.contains('mini');
 window.LunaApp={setMini(v){document.documentElement.classList.toggle('mini',!!v);if(v){try{$('#modal').style.display='none'}catch(e){}}},toggle(){tog()},stop(){if(on)stop()},isOn(){return on}};
-const PHONE_NAMES=['open_app','open_url','read_screen','click_text','tap','swipe','scroll','type_text','press','wait','control_volume','get_phone_status','accept_call','auto_reply'];
+const PHONE_NAMES=['open_app','open_url','read_screen','click_text','tap','swipe','scroll','type_text','press','wait','control_volume','get_phone_status','accept_call','auto_reply','make_call','speaker_on'];
 const _o={type:'OBJECT',properties:{reason:{type:'STRING'}}};
 const PHONE_TOOLS=PH?[
 {name:'open_app',description:'Open app by name',parameters:{type:'OBJECT',properties:{name:{type:'STRING'}},required:['name']}},
@@ -300,9 +318,11 @@ const PHONE_TOOLS=PH?[
 {name:'control_volume',description:'Volume up/down/mute',parameters:{type:'OBJECT',properties:{action:{type:'STRING'}},required:['action']}},
 {name:'get_phone_status',description:'Get battery info',parameters:_o},
 {name:'accept_call',description:'Answer incoming call',parameters:_o},
-{name:'auto_reply',description:'Auto reply to a specific sender on WhatsApp/Messenger',parameters:{type:'OBJECT',properties:{app:{type:'STRING'}, sender:{type:'STRING'}, message:{type:'STRING'}},required:['app','sender','message']}}
+{name:'make_call',description:'Call a phone number',parameters:{type:'OBJECT',properties:{number:{type:'STRING'}},required:['number']}},
+{name:'speaker_on',description:'Turn on speakerphone during a call',parameters:_o},
+{name:'auto_reply',description:'Auto reply to a specific sender',parameters:{type:'OBJECT',properties:{app:{type:'STRING'}, sender:{type:'STRING'}, message:{type:'STRING'}},required:['app','sender','message']}}
 ]:[];
-function PHONE_SKILL(){return PH?'\nতুমি open_app, read_screen, click_text, tap, auto_reply ইত্যাদি টুল দিয়ে ফোন চালাতে পারো। মেসেজ নোটিফিকেশন পেলে read_notifications দিয়ে পড়বে এবং ব্যবহারকারীকে বলবে। ১০ সেকেন্ড অপেক্ষা করবে, উত্তর না পেলে auto_reply টুল কল করবে।':'';
+function PHONE_SKILL(){return PH?'\nতুমি open_app, read_screen, click_text, tap, make_call, accept_call, speaker_on, auto_reply ইত্যাদি টুল দিয়ে ফোন চালাতে পারো।':'';
 }
 let _pid=0;const _pp={};
 window.__lunaRes=(id,r)=>{const f=_pp[id];if(f){delete _pp[id];f(r)}};
