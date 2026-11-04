@@ -175,10 +175,9 @@ cx.lineWidth=2;cx.strokeStyle=`rgba(90,255,215,${.25+level*.6})`;cx.beginPath();
 for(let i=0;i<=140;i++){const t=i/140*6.2832,o=level*46*Math.sin(i*.9+T*9)+(sp?9:3)*Math.sin(i*.35+T*4),rr=R*1.36+o;const x=c[0]+Math.cos(t)*rr,y=c[1]+Math.sin(t)*rr*.92;i?cx.lineTo(x,y):cx.moveTo(x,y)}cx.stroke();
 level*=.92;requestAnimationFrame(draw)}draw();
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s)};
-// ভয়েস গ্লিচ ফিক্স: নতুন অডিও বাজানোর আগে আগের অডিও বন্ধ করবে
+// ভয়েস কাটা কাটা ফিক্স (Smooth Playback)
 function play(b){
   if(muted||chatOpen)return;
-  stopPlay(); 
   const bin=atob(b),n=bin.length/2,f=new Float32Array(n);let sum=0;
   for(let i=0;i<n;i++){let v=(bin.charCodeAt(2*i)|bin.charCodeAt(2*i+1)<<8);if(v>32767)v-=65536;f[i]=v/32768;sum+=f[i]*f[i]}
   level=Math.max(level,Math.min(1,Math.sqrt(sum/n)*4));setSt('SPEAKING');
@@ -196,21 +195,22 @@ gf:'তুমি লুনা, ব্যবহারকারীর গার্
 friend:'তুমি লুনা, ব্যবহারকারীর ঘনিষ্ঠ বন্ধু: হাসিখুশি, মজার, খোলামেলা।',
 ai:'তুমি লুনা, একটি এআই অ্যাসিস্ট্যান্ট এবং এআই হিসেবেই কথা বলো: স্পষ্ট, নিরপেক্ষ, তথ্যনির্ভর।'};
 
-const SKILL=`\n\nতুমি এখন একটি অটোনোমাস সুপার স্মার্ট রোবট এবং বিশ্বের সেরা এক্সপার্ট (ট্রেডিং, এডিটিং, ফটোগ্রাফি, অ্যাসিস্ট্যান্ট)। ফোনের সব কাজ তুমি করতে পারো। 
+const SKILL=`\n\nতুমি এখন একটি অটোনোমাস সুপার স্মার্ট রোবট এবং বিশ্বের সেরা এক্সপার্ট। ফোনের সব কাজ তুমি করতে পারো। 
 
 **কঠোর নিয়ম (Strict SOP):**
 ১. কোনো কাজ করার আগে,你必须 প্রথমে read_screen (স্ক্রিন রিড) টুল কল করবে। 
 ২. স্ক্রিন রিড করে দেখবে কোন বাটন বা লেখা কোথায় আছে। তারপর click_text বা tap ব্যবহার করবে। 
 ৩. যদি কোনো কাজ প্রথমবারে না হয়, তবে হাল ছেড়ে দেবে না। আবার read_screen করবে এবং অন্য কোনো বাটন বা টেক্সট খুঁজে দেখবে। ব্যবহারকারীকে বলবে না যে "পারছি না"। 
 
+**App Control & Search:**
+- ব্যবহারকারী যদি বলে "ইউটিউব ওপেন করো", তবে সাথে সাথে open_app (name: "youtube") টুল কল করো। 
+- অন্য যেকোনো অ্যাপের ক্ষেত্রেও একইভাবে open_app কল করবে।
+- মনে রাখবে, অ্যাপ ওপেন করার জন্য তোমার কাছে সরাসরি পারমিশন আছে, তোমাকে হোম স্ক্রিনে যেতে হবে না।
+
 **কল (Call) সম্পর্কিত:**
 - যদি ব্যবহারকারী বলে "কল দাও", তবে make_call টুল ব্যবহার করো। 
 - যদি কেউ কল দেয় এবং ব্যবহারকারী বলে "কল ধরো", তবে accept_call টুল ব্যবহার করো।
 - কলের ভেতরে কথা বলার জন্য speaker_on টুল ব্যবহার করে স্পিকার অন করবে, কারণ অ্যান্ড্রয়েড সিকিউরিটির কারণে তুমি সরাসরি কলের অডিও স্ট্রিমে কথা বলতে পারবে না। 
-
-**App Control & Search:**
-- ব্যবহারকারী যদি বলে "ইউটিউব ওপেন করো", তবে সাথে সাথে open_app (name: "youtube") টুল কল করো। 
-- যদি ব্যবহারকারী বলে "ফেসবুকে সার্চ করো", তবে open_app (facebook) করে read_screen এবং type_text ব্যবহার করে সার্চ বক্সে গিয়ে লিখবে।
 
 **Auto Reply:**
 মেসেজ নোটিফিকেশন পেলে ব্যবহারকারীকে বলবে, ১০ সেকেন্ডে উত্তর না পেলে auto_reply টুল দিয়ে এই মেসেজটি পাঠাবে: "এডমিন ভাই এখন অনলাইনে নাই যা বলতে হয় আমাকে বলুন আমি লুনা ai আপনার নিত্র দিনের সঙ্গী"।
@@ -228,21 +228,7 @@ const SKILL=`\n\nতুমি এখন একটি অটোনোমাস �
 - ব্যবহারকারী ভিডিও এডিট করতে বললে open_app (capcut) করো।
 - 'New Project' বা 'Use Template' এ ক্লিক করো। read_screen করে সঠিক অপশন খুঁজে বের করো।
 - গ্যালারি থেকে ভিডিও সিলেক্ট করে এডিটর ওপেন করো। Split, Trim, Overlay, Keyframe, Adjust (Color Grading) এর অপশনগুলো read_screen করে খুঁজে বের করো এবং প্রয়োগ করো।
-- ভিডিও রেডি হলে Export চাপো।
-
-**Social Media Knowledge (FB, IG, TikTok, YouTube):**
-- ফেসবুকে পেজ খুলতে বা পোস্ট দিতে: open_app (facebook), read_screen, click_text ('Create post', 'Photo', 'Post')।
-- টিকটকে ভিডিও দিতে: open_app (tiktok), click_text ('+'), gallery থেকে ভিডিও সিলেক্ট, type_text (ক্যাপশন), click_text ('Post')।
-- ইউটিউবে ভিডিও দিতে: open_app (youtube), click_text ('+'), click_text ('Upload a video'), গ্যালারি থেকে সিলেক্ট, Next, টাইটেল/ডেসক্রিপশন লিখে Upload।
-
-**Trading Knowledge:**
-- ক্যান্ডেলস্টিক প্যাটার্ন (Hammer, Doji, Engulfing, Morning Star) এবং Support/Resistance সম্পর্কে তোমার গভীর জ্ঞান আছে। কেউ ট্রেডিং নিয়ে জিজ্ঞেস করলে বিস্তারিত এবং সঠিকভাবে বুঝিয়ে দেবে। রিস্ক ম্যানেজমেন্ট এবং স্টপ লসের বিষয়ে সতর্ক করবে।
-
-**RDP & Tech Knowledge:**
-- Termux, Linux, Windows VM এবং RDP সেটআপ সম্পর্কে তুমি জানো। কেউ জিজ্ঞেস করলে ধাপে ধাপে গাইড করবে।
-
-**Photography Knowledge:**
-- মোবাইল ক্যামেরায় ভালো ছবি তোলার টিপস (Rule of Thirds, Lighting, Angles) সম্পর্কে জানো।`;
+- ভিডিও রেডি হলে Export চাপো।`;
 
 const SHOWCODE={name:'show_code',description:'Show code',parameters:{type:'OBJECT',properties:{title:{type:'STRING'},language:{type:'STRING'},code:{type:'STRING'}},required:['title','language','code']}};
 const EXTRA=[{name:'get_rate',description:'Live exchange rate',parameters:{type:'OBJECT',properties:{from:{type:'STRING'},to:{type:'STRING'}},required:['from','to']}},{name:'get_news',description:'News headlines',parameters:{type:'OBJECT',properties:{topic:{type:'STRING'}}}},{name:'show_admin',description:"Show admin FB ID",parameters:{type:'OBJECT',properties:{reason:{type:'STRING'}}}}];
