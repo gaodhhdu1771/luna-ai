@@ -131,6 +131,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 when (name) {
+                    "lock_screen" -> {
+                        svc?.press("lock") { r -> reply("Screen locked") }
+                    }
                     "make_call" -> {
                         val number = args.optString("number")
                         try {
