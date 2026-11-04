@@ -105,14 +105,14 @@ class LunaAccessibilityService : AccessibilityService() {
             "screenshot" -> GLOBAL_ACTION_TAKE_SCREENSHOT
             "enter" -> {
                 val root = rootInActiveWindow
-                val f = root?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-                // এন্টার চাপার জন্য KEYCODE_ENTER ইভেন্ট পাঠানো
-                if (f != null) {
-                    val args = Bundle().apply {
-                        putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_KEY_EVENT, android.view.KeyEvent.KEYCODE_ENTER)
-                    }
-                    cb(if (f.performAction(AccessibilityNodeInfo.ACTION_CLICK, args)) "ok" else "no field")
-                } else cb("no field")
+                val focused = root?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+                if (focused != null) {
+                    // অ্যান্ড্রয়েড ১১+ এ Enter/Search প্রেস করার সঠিক উপায়
+                    val actionEnter = AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER
+                    cb(if (focused.performAction(actionEnter.id)) "ok" else "failed")
+                } else {
+                    cb("no field")
+                }
                 return
             }
             else -> return cb("unknown key")
