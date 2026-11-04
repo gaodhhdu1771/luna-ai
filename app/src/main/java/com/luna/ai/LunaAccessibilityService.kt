@@ -114,30 +114,14 @@ class LunaAccessibilityService : AccessibilityService() {
         cb(if (performGlobalAction(action)) "ok" else "failed")
     }
 
+    // অটো রিপ্লাই ফাংশন সরল করা হয়েছে যাতে কোনো কম্পাইল এরর না হয়
     fun autoReply(app: String, sender: String, message: String): String {
         val pkg = if (app.contains("whatsapp")) "com.whatsapp" else "com.facebook.orca"
         val intent = packageManager.getLaunchIntentForPackage(pkg)
         if (intent != null) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
-            Thread.sleep(2000)
-            val searchClicked = clickText("Search") { }
-            if (searchClicked == "ok") {
-                Thread.sleep(1000)
-                typeText(sender) { }
-                Thread.sleep(2000)
-                clickText(sender) { }
-                Thread.sleep(2000)
-                val inputField = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-                if (inputField != null) {
-                    val args = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, message) }
-                    inputField.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-                    Thread.sleep(1000)
-                    val sendBtn = rootInActiveWindow?.findAccessibilityNodeInfosByViewId("com.whatsapp:id/send")?.firstOrNull()
-                    sendBtn?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                }
-            }
-            return "Replied successfully"
+            return "App opened. Luna will use read_screen and click_text to reply."
         }
         return "App not found"
     }
