@@ -11,10 +11,7 @@ class LunaNotificationService : NotificationListenerService() {
         super.onNotificationPosted(sbn)
         if (sbn == null) return
 
-        // নিজের অ্যাপের নোটিফিকেশন ইগনোর করবে
         if (sbn.packageName == packageName) return
-
-        // চলমান নোটিফিকেশন (যেমন: মিউজিক প্লেয়ার) ইগনোর করবে
         if ((sbn.notification.flags and Notification.FLAG_ONGOING_EVENT) != 0) return
 
         val extras = sbn.notification.extras
@@ -25,7 +22,6 @@ class LunaNotificationService : NotificationListenerService() {
         val finalText = if (bigText.isNotEmpty()) bigText else text
 
         if (finalText.isNotEmpty() && title.isNotEmpty()) {
-            // অ্যাপের নাম বের করা
             val pm = applicationContext.packageManager
             val appName = try {
                 val appInfo = pm.getApplicationInfo(sbn.packageName, 0)
@@ -34,7 +30,6 @@ class LunaNotificationService : NotificationListenerService() {
                 sbn.packageName
             }
 
-            // মেইন অ্যাক্টিভিটি বা ফ্লোটিং সার্ভিসে মেসেজ পাঠানো
             MainActivity.sendMessageToWebView(appName, title, finalText)
         }
     }
