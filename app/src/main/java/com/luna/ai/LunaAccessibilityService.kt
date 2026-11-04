@@ -114,7 +114,6 @@ class LunaAccessibilityService : AccessibilityService() {
         cb(if (performGlobalAction(action)) "ok" else "failed")
     }
 
-    // অটো রিপ্লাই ফাংশন সরল করা হয়েছে যাতে কোনো কম্পাইল এরর না হয়
     fun autoReply(app: String, sender: String, message: String): String {
         val pkg = if (app.contains("whatsapp")) "com.whatsapp" else "com.facebook.orca"
         val intent = packageManager.getLaunchIntentForPackage(pkg)
