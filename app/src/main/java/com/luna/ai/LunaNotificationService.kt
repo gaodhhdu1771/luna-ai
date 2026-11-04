@@ -12,8 +12,19 @@ import android.service.notification.StatusBarNotification
 class LunaNotificationService : NotificationListenerService() {
 
     companion object {
-        // মেসেজের নোটিফিকেশন সেভ করে রাখবে রিপ্লাই দেওয়ার জন্য
+        // এই instance ভেরিয়েবলটাই MainActivity খুঁজছিল
+        var instance: LunaNotificationService? = null
         val recentMessages = mutableMapOf<String, StatusBarNotification>()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
+
+    override fun onDestroy() {
+        instance = null
+        super.onDestroy()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -45,7 +56,7 @@ class LunaNotificationService : NotificationListenerService() {
         }
     }
 
-    // নতুন ফাংশন: নোটিফিকেশন থেকেই সাইলেন্টলি মেসেজ পাঠাবে
+    // নোটিফিকেশন থেকেই সাইলেন্টলি মেসেজ পাঠাবে (অ্যাপ ওপেন হবে না)
     fun sendSilentReply(sender: String, message: String): Boolean {
         val sbn = recentMessages[sender] ?: return false
         val actions = sbn.notification.actions ?: return false
