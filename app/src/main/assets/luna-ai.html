@@ -122,8 +122,9 @@ if(location.search.includes('mini=1'))document.documentElement.classList.add('mi
 const $=s=>document.querySelector(s);
 const S=(k,d)=>{try{const v=localStorage.getItem('luna_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const W=(k,v)=>{try{localStorage.setItem('luna_'+k,JSON.stringify(v))}catch(e){}};
-// মডেল নেম আপডেট করা হলো (stable version)
-let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-2.0-flash-exp', vision:true, taskTime:'', taskPrompt:''});
+// মডেল আপডেট করা হলো গুগলের নতুন স্ট্যাবল লাইভ মডেলে
+let cfg=S('cfg',{key:'',gnews:'',voice:'Aoede',model:'gemini-3.8-live', vision:true, taskTime:'', taskPrompt:''});
+if(cfg.model !== 'gemini-3.8-live'){ cfg.model = 'gemini-3.8-live'; W('cfg', cfg); }
 if(!cfg.gnews)cfg.gnews='1859b59abdb4444aa520afab7109e3dc';
 if(!cfg.mode)cfg.mode='gf';
 
