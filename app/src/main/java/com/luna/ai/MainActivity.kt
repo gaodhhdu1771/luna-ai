@@ -111,6 +111,18 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(object {
 
             @JavascriptInterface
+            fun startFloat() {
+                if (Settings.canDrawOverlays(this@MainActivity)) {
+                    startService(Intent(this@MainActivity, LunaFloatService::class.java))
+                }
+            }
+
+            @JavascriptInterface
+            fun stopFloat() {
+                stopService(Intent(this@MainActivity, LunaFloatService::class.java))
+            }
+
+            @JavascriptInterface
             fun status(token: String): String {
                 val acc = LunaAccessibilityService.instance != null
                 val ov = Settings.canDrawOverlays(this@MainActivity)
@@ -135,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                         val intent = Intent(this@MainActivity, MainActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                         startActivity(intent)
+                        stopService(Intent(this@MainActivity, LunaFloatService::class.java))
                         reply("ok")
                     }
                     "make_call" -> {
@@ -227,6 +240,9 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl("https://appassets.androidplatform.net/assets/luna-ai.html?t=$timestamp")
     }
 
-    override fun onResume() { super.onResume(); stopService(Intent(this, LunaFloatService::class.java)) }
-    override fun onPause() { super.onPause(); if (Settings.canDrawOverlays(this)) startService(Intent(this, LunaFloatService::class.java)) }
+    override fun onResume() { 
+        super.onResume()
+        // অ্যাপে ফিরে আসলে ফ্লোট অরব বন্ধ হবে (লুনা অন থাকলেও)
+        stopService(Intent(this, LunaFloatService::class.java)) 
+    }
 }
