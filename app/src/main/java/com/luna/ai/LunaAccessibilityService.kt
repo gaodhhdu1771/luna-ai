@@ -23,18 +23,28 @@ class LunaAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
 
+    // অপটিমাইজড স্ক্রিন রিড (শুধু ক্লিকযোগ্য ও এডিটযোগ্য জিনিস)
     fun readScreen(): String {
         val root = rootInActiveWindow ?: return """{"elements":[]}"""
         val arr = JSONArray()
+        val dm = resources.displayMetrics
+        
         fun walk(node: AccessibilityNodeInfo?) {
             node ?: return
+            val isClickable = node.isClickable
+            val isEditable = node.isEditable
             val label = node.text?.toString()?.trim().orEmpty()
                 .ifEmpty { node.contentDescription?.toString()?.trim().orEmpty() }
-            if (label.isNotEmpty()) {
+            
+            if (label.isNotEmpty() && (isClickable || isEditable || node.className?.contains("TextView") == true || node.className?.contains("Button") == true)) {
                 val r = Rect(); node.getBoundsInScreen(r)
-                arr.put(JSONObject().apply {
-                    put("text", label); put("x", r.centerX()); put("y", r.centerY())
-                })
+                // স্ক্রিনের ভেতরে থাকা জিনিসগুলোই নেবে
+                if (r.top >= 0 && r.bottom <= dm.heightPixels && r.left >= 0 && r.right <= dm.widthPixels) {
+                    arr.put(JSONObject().apply {
+                        put("text", label); put("x", r.centerX()); put("y", r.centerY())
+                        if (isEditable) put("editable", true)
+                    })
+                }
             }
             for (i in 0 until node.childCount) walk(node.getChild(i))
         }
@@ -107,27 +117,17 @@ class LunaAccessibilityService : AccessibilityService() {
                 val root = rootInActiveWindow
                 val focused = root?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
                 if (focused != null) {
-                    // অ্যান্ড্রয়েড ১১+ এ Enter/Search প্রেস করার সঠিক উপায়
                     val actionEnter = AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER
                     cb(if (focused.performAction(actionEnter.id)) "ok" else "failed")
-                } else {
-                    cb("no field")
-                }
+                } else cb("no field")
                 return
             }
             else -> return cb("unknown key")
         }
         cb(if (performGlobalAction(action)) "ok" else "failed")
     }
-
+    
     fun autoReply(app: String, sender: String, message: String): String {
-        val pkg = if (app.contains("whatsapp")) "com.whatsapp" else "com.facebook.orca"
-        val intent = packageManager.getLaunchIntentForPackage(pkg)
-        if (intent != null) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-            return "App opened. Luna will use read_screen and click_text to reply."
-        }
-        return "App not found"
+        return "App opened. Luna will use read_screen and click_text to reply."
     }
 }
