@@ -131,8 +131,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 when (name) {
-                    "lock_screen" -> {
-                        svc?.press("lock") { r -> reply("Screen locked") }
+                    "open_main_app" -> {
+                        val intent = Intent(this@MainActivity, MainActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                        startActivity(intent)
+                        reply("ok")
                     }
                     "make_call" -> {
                         val number = args.optString("number")
@@ -143,31 +146,21 @@ class MainActivity : AppCompatActivity() {
                                 startActivity(intent)
                                 reply("Calling $number")
                             } else {
-                                reply("Permission denied for calling")
+                                reply("Permission denied")
                             }
                         } catch (e: Exception) { reply("Call error: ${e.message}") }
                     }
-                    "accept_call" -> {
-                        svc?.clickText("Answer") { r ->
-                            if (r == "ok" || r == "clicked") reply("Call accepted")
-                            else {
-                                svc?.clickText("Accept") { r2 ->
-                                    reply(if (r2 == "ok") "Call accepted" else "Could not find answer button")
-                                }
-                            }
-                        } ?: reply("Accessibility service not running")
-                    }
+                    "accept_call" -> svc?.clickText("Answer") { r -> reply(r) } ?: reply("No accessibility")
                     "speaker_on" -> {
                         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                         am.isSpeakerphoneOn = true
-                        reply("Speaker turned ON")
+                        reply("Speaker ON")
                     }
                     "auto_reply" -> {
                         val sender = args.optString("sender")
                         val message = args.optString("message")
-                        // সাইলেন্ট রিপ্লাই (অ্যাপ ওপেন হবে না)
                         val success = LunaNotificationService.instance?.sendSilentReply(sender, message) ?: false
-                        reply(if (success) "Replied silently" else "Reply failed")
+                        reply(if (success) "Replied" else "Failed")
                     }
                     "control_volume" -> {
                         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -180,13 +173,11 @@ class MainActivity : AppCompatActivity() {
                     "get_phone_status" -> {
                         val bm = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
                         val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                        val charging = bm.isCharging
-                        reply("Battery: $level%, Charging: $charging")
+                        reply("Battery: $level%")
                     }
                     "open_app" -> {
                         val query = args.optString("name").lowercase().trim()
                         val pm = packageManager
-                        
                         val knownPkgs = mapOf(
                             "youtube" to "com.google.android.youtube", "whatsapp" to "com.whatsapp",
                             "facebook" to "com.facebook.katana", "messenger" to "com.facebook.orca",
@@ -197,18 +188,11 @@ class MainActivity : AppCompatActivity() {
                             "phone" to "com.android.dialer", "gallery" to "com.android.gallery3d",
                             "telegram" to "org.telegram.messenger", "gmail" to "com.google.android.gm"
                         )
-                        
                         var targetPkg = knownPkgs.entries.firstOrNull { query.contains(it.key) }?.value
-                        
                         if (targetPkg == null) {
                             val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                            val appInfo = apps.firstOrNull { 
-                                val label = pm.getApplicationLabel(it).toString().lowercase()
-                                label == query || label.contains(query) || it.packageName.lowercase().contains(query)
-                            }
-                            targetPkg = appInfo?.packageName
+                            targetPkg = apps.firstOrNull { pm.getApplicationLabel(it).toString().lowercase().contains(query) }?.packageName
                         }
-                        
                         if (targetPkg != null) {
                             try {
                                 val intent = pm.getLaunchIntentForPackage(targetPkg)
@@ -216,11 +200,9 @@ class MainActivity : AppCompatActivity() {
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     startActivity(intent)
                                     reply("ok")
-                                } else reply("App cannot be launched")
-                            } catch (e: Exception) { reply("Launch error") }
-                        } else {
-                            reply("App not found")
-                        }
+                                } else reply("Cannot launch")
+                            } catch (e: Exception) { reply("Error") }
+                        } else reply("App not found")
                     }
                     "open_url" -> { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(args.optString("url")))); reply("ok") }
                     "read_screen" -> reply(svc?.readScreen() ?: "")
